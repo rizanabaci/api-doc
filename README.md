@@ -211,19 +211,9 @@ Content-Type: application/json
   "password": "securepassword123",
   "first_name": "Jane",
   "last_name": "Smith",
-  "role": "viewer",
-  "head_id": null
+  "role": "viewer"
 }
 ```
-
-**Request Parameters:**
-- `username` (required) - Username for the new user
-- `email` (required) - Email address
-- `password` (required) - Password (minimum 8 characters)
-- `first_name` (optional) - User's first name
-- `last_name` (optional) - User's last name
-- `role` (optional, default: "viewer") - Either "admin" or "viewer"
-- `head_id` (optional) - ID of the superior/head user in the organizational hierarchy
 
 **Response:** `201 Created`
 ```json
@@ -248,48 +238,6 @@ GET /api/users/list/
 - `ordering` - Sort by field: `username`, `date_joined`, `created_at`
 
 **Response:** `200 OK`
-```json
-[
-  {
-    "id": 1,
-    "username": "john_admin",
-    "email": "john@example.com",
-    "first_name": "John",
-    "last_name": "Doe",
-    "role": "admin",
-    "is_active": true,
-    "head": null,
-    "groups": [
-      {
-        "id": 1,
-        "name": "Security Team",
-        "description": "Security personnel"
-      }
-    ],
-    "created_at": "2026-01-16T10:00:00Z",
-    "updated_at": "2026-01-16T10:00:00Z"
-  },
-  {
-    "id": 2,
-    "username": "jane_viewer",
-    "email": "jane@example.com",
-    "first_name": "Jane",
-    "last_name": "Smith",
-    "role": "viewer",
-    "is_active": true,
-    "head": {
-      "id": 1,
-      "username": "john_admin",
-      "email": "john@example.com",
-      "first_name": "John",
-      "last_name": "Doe"
-    },
-    "groups": [],
-    "created_at": "2026-01-16T11:00:00Z",
-    "updated_at": "2026-01-16T11:00:00Z"
-  }
-]
-```
 
 #### Get User Details
 ```
@@ -297,31 +245,6 @@ GET /api/users/detail/{id}/
 ```
 
 **Response:** `200 OK`
-```json
-{
-  "id": 2,
-  "user": {
-    "id": 2,
-    "username": "jane_viewer",
-    "email": "jane@example.com",
-    "first_name": "Jane",
-    "last_name": "Smith"
-  },
-  "role": "viewer",
-  "is_active": true,
-  "head_id": 1,
-  "head": {
-    "id": 1,
-    "username": "john_admin",
-    "email": "john@example.com",
-    "first_name": "John",
-    "last_name": "Doe"
-  },
-  "groups": [],
-  "created_at": "2026-01-16T11:00:00Z",
-  "updated_at": "2026-01-16T11:00:00Z"
-}
-```
 
 #### Update User Details
 ```
@@ -333,37 +256,11 @@ Content-Type: application/json
   "email": "newemail@example.com",
   "first_name": "Jane",
   "last_name": "Smith",
-  "role": "admin",
-  "head_id": 1
+  "role": "admin"
 }
 ```
 
 **Response:** `200 OK`
-```json
-{
-  "id": 2,
-  "user": {
-    "id": 2,
-    "username": "jane_viewer",
-    "email": "newemail@example.com",
-    "first_name": "Jane",
-    "last_name": "Smith"
-  },
-  "role": "admin",
-  "is_active": true,
-  "head_id": 1,
-  "head": {
-    "id": 1,
-    "username": "john_admin",
-    "email": "john@example.com",
-    "first_name": "John",
-    "last_name": "Doe"
-  },
-  "groups": [],
-  "created_at": "2026-01-16T11:00:00Z",
-  "updated_at": "2026-01-16T12:30:00Z"
-}
-```
 
 #### Delete User (Soft Delete)
 ```
@@ -470,7 +367,13 @@ GET /api/devices/sensors/
     "is_online": true,
     "ip_address": "192.168.1.100",
     "mac_address": "AA:BB:CC:DD:EE:01",
-    "sensor_groups": [],
+    "sensor_groups": [
+      {
+        "id": 1,
+        "name": "Office Sensors",
+        "description": "Sensors in office spaces"
+      }
+    ],
     "halo_config": {...},
     "positioning": {
       "x_val": 10.5,
@@ -514,13 +417,23 @@ Content-Type: application/json
   "location": "Building A - Room 102",
   "is_active": true,
   "mac_address": "AA:BB:CC:DD:EE:02",
-  "sensor_groups_ids": [1],
+  "sensor_group_ids": [1, 2],
   "x_val": 15.0,
   "y_val": 25.0,
   "z_val": 1.5,
   "radius": 5.0
 }
 ```
+
+**Request Parameters:**
+- `name` (required) - Sensor name/identifier
+- `sensor_type` (required) - Sensor type (HALO_3C, HALO_IOT, HALO_SMART, HALO_CUSTOM)
+- `location` (optional) - Physical location
+- `is_active` (optional, default: true) - Whether sensor is active
+- `mac_address` (optional) - MAC address
+- `sensor_group_ids` (optional) - Array of sensor group IDs to add sensor to
+- `x_val`, `y_val`, `z_val` (optional) - Position coordinates
+- `radius` (optional) - Spherical coverage radius
 
 **Response:** `201 Created`
 
@@ -532,9 +445,14 @@ Content-Type: application/json
 
 {
   "location": "Updated Location",
-  "is_online": true
+  "is_online": true,
+  "sensor_group_ids": [2, 3]
 }
 ```
+
+**Request Parameters:**
+- `sensor_group_ids` (optional) - Array of sensor group IDs. If provided, sensor will be removed from old groups and added to new ones
+- Other optional fields: name, sensor_type, location, is_active, is_online, mac_address, etc.
 
 **Response:** `200 OK`
 
