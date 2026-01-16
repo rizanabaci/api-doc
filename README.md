@@ -211,9 +211,19 @@ Content-Type: application/json
   "password": "securepassword123",
   "first_name": "Jane",
   "last_name": "Smith",
-  "role": "viewer"
+  "role": "viewer",
+  "head_id": null
 }
 ```
+
+**Request Parameters:**
+- `username` (required) - Username for the new user
+- `email` (required) - Email address
+- `password` (required) - Password (minimum 8 characters)
+- `first_name` (optional) - User's first name
+- `last_name` (optional) - User's last name
+- `role` (optional, default: "viewer") - Either "admin" or "viewer"
+- `head_id` (optional) - ID of the superior/head user in the organizational hierarchy
 
 **Response:** `201 Created`
 ```json
@@ -238,6 +248,48 @@ GET /api/users/list/
 - `ordering` - Sort by field: `username`, `date_joined`, `created_at`
 
 **Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "username": "john_admin",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "admin",
+    "is_active": true,
+    "head": null,
+    "groups": [
+      {
+        "id": 1,
+        "name": "Security Team",
+        "description": "Security personnel"
+      }
+    ],
+    "created_at": "2026-01-16T10:00:00Z",
+    "updated_at": "2026-01-16T10:00:00Z"
+  },
+  {
+    "id": 2,
+    "username": "jane_viewer",
+    "email": "jane@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "role": "viewer",
+    "is_active": true,
+    "head": {
+      "id": 1,
+      "username": "john_admin",
+      "email": "john@example.com",
+      "first_name": "John",
+      "last_name": "Doe"
+    },
+    "groups": [],
+    "created_at": "2026-01-16T11:00:00Z",
+    "updated_at": "2026-01-16T11:00:00Z"
+  }
+]
+```
 
 #### Get User Details
 ```
@@ -245,6 +297,31 @@ GET /api/users/detail/{id}/
 ```
 
 **Response:** `200 OK`
+```json
+{
+  "id": 2,
+  "user": {
+    "id": 2,
+    "username": "jane_viewer",
+    "email": "jane@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith"
+  },
+  "role": "viewer",
+  "is_active": true,
+  "head_id": 1,
+  "head": {
+    "id": 1,
+    "username": "john_admin",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "groups": [],
+  "created_at": "2026-01-16T11:00:00Z",
+  "updated_at": "2026-01-16T11:00:00Z"
+}
+```
 
 #### Update User Details
 ```
@@ -256,11 +333,37 @@ Content-Type: application/json
   "email": "newemail@example.com",
   "first_name": "Jane",
   "last_name": "Smith",
-  "role": "admin"
+  "role": "admin",
+  "head_id": 1
 }
 ```
 
 **Response:** `200 OK`
+```json
+{
+  "id": 2,
+  "user": {
+    "id": 2,
+    "username": "jane_viewer",
+    "email": "newemail@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith"
+  },
+  "role": "admin",
+  "is_active": true,
+  "head_id": 1,
+  "head": {
+    "id": 1,
+    "username": "john_admin",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "groups": [],
+  "created_at": "2026-01-16T11:00:00Z",
+  "updated_at": "2026-01-16T12:30:00Z"
+}
+```
 
 #### Delete User (Soft Delete)
 ```
