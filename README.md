@@ -614,6 +614,7 @@ DELETE /api/devices/sensors/{id}/
 ### sensor config choices
 
 SENSOR_CONFIG_CHOICES = [
+
         # Temperature & Humidity
         ('temp_c', 'Temperature (Celsius)'),
         ('temp_f', 'Temperature (Fahrenheit)'),
