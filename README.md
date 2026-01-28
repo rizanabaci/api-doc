@@ -437,7 +437,7 @@ Base URL: `/api/devices/`
 
 #### List All Sensors
 ```
-GET /api/devices/sensors/
+GET /api/devices/sensors/?limit=10&offset=0
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
@@ -446,57 +446,66 @@ GET /api/devices/sensors/
 - Viewer: Read-only
 
 **Query Parameters:**
+- `limit` (optional, default: 10) - Number of results to return (max 100)
+- `offset` (optional, default: 0) - Number of results to skip
 - `sensor_type` - Filter by type
 - `is_active` - Filter by status
 - `is_online` - Filter by online status
 - `area` - Filter by area ID
 - `search` - Search by name, description, mac_address, ip_address
+- `ordering` - Order by field (created_at, name, is_active, sensor_type)
 
 **Response:** `200 OK`
 ```json
-[
-  {
-    "id": 1,
-    "name": "Sensor-001",
-    "sensor_type": "HALO_3C",
-    "description": "Temperature and air quality sensor",
-    "is_active": true,
-    "is_online": true,
-    "ip_address": "192.168.1.100",
-    "mac_address": "AA:BB:CC:DD:EE:01",
-    "username": "sensor_user",
-    "password": "sensor_pass",
-    "area": 1,
-    "sensor_groups": [
-      {
-        "id": 1,
-        "name": "Office Sensors",
-        "description": "Sensors in office spaces"
-      }
-    ],
-    "halo_config": {...},
-    "positioning": {
-      "x_val": 10.5,
-      "y_val": 20.3,
-      "z_val": 1.5
-    },
-    "boundary": {
-      "x_min": 0.0,
-      "y_min": 0.0,
-      "x_max": 50.0,
-      "y_max": 50.0,
-      "z_min": 0.0,
-      "z_max": 3.0,
-      "boundary_opacity_val": 0.5
-    },
-    "spherical": {
-      "radius": 5.0,
-      "hemisphere_opacity_val": 0.5
-    },
-    "created_at": "2026-01-16T10:00:00Z",
-    "updated_at": "2026-01-16T10:00:00Z"
-  }
-]
+{
+  "count": 25,
+  "next": "http://localhost:8000/api/devices/sensors/?limit=10&offset=10",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "name": "Sensor-001",
+      "sensor_type": "HALO_3C",
+      "description": "Temperature and air quality sensor",
+      "is_active": true,
+      "is_online": true,
+      "ip_address": "192.168.1.100",
+      "mac_address": "AA:BB:CC:DD:EE:01",
+      "username": "sensor_user",
+      "password": "sensor_pass",
+      "area": 1,
+      "area_name": "Building A",
+      "sensor_groups": [
+        {
+          "id": 1,
+          "name": "Office Sensors",
+          "description": "Sensors in office spaces"
+        }
+      ],
+      "has_configurations": true,
+      "positioning": {
+        "x_val": 10.5,
+        "y_val": 20.3,
+        "z_val": 1.5
+      },
+      "boundary": {
+        "x_min": 0.0,
+        "y_min": 0.0,
+        "x_max": 50.0,
+        "y_max": 50.0,
+        "z_min": 0.0,
+        "z_max": 3.0,
+        "boundary_opacity_val": 0.5
+      },
+      "spherical": {
+        "radius": 5.0,
+        "hemisphere_opacity_val": 0.5
+      },
+      "created_at": "2026-01-16T10:00:00Z",
+      "updated_at": "2026-01-16T10:00:00Z"
+    }
+  ]
+}
 ```
 
 #### Get Sensor by ID
@@ -603,6 +612,207 @@ DELETE /api/devices/sensors/{id}/
 }
 ```
 
+#### Add Sensor Configuration
+```
+POST /api/devices/sensors/{id}/add_configuration/
+Content-Type: application/json
+
+{
+  "sensor_name": "temperature",
+  "sensor_type": "TEMPERATURE",
+  "unit": "°C",
+  "description": "Room temperature sensor",
+  "threshold": 25.0,
+  "min_value": -10.0,
+  "max_value": 50.0
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Request Parameters:**
+- `sensor_name` (required) - Configuration name for the sensor parameter
+- `sensor_type` (required) - Type of sensor (TEMPERATURE, HUMIDITY, CO2, PM2.5, etc.)
+- `unit` (optional) - Measurement unit (°C, %, ppm, µg/m³, etc.)
+- `description` (optional) - Description of the sensor configuration
+- `threshold` (optional) - Threshold value for alerts
+- `min_value` (optional) - Minimum acceptable value
+- `max_value` (optional) - Maximum acceptable value
+
+**Response:** `201 Created`
+```json
+{
+  "id": 1,
+  "sensor_name": "temperature",
+  "sensor_type": "TEMPERATURE",
+  "unit": "°C",
+  "description": "Room temperature sensor",
+  "threshold": 25.0,
+  "min_value": -10.0,
+  "max_value": 50.0,
+  "created_at": "2026-01-27T10:05:00Z",
+  "updated_at": "2026-01-27T10:05:00Z"
+}
+```
+
+**Error Response (Duplicate Configuration):** `409 Conflict`
+```json
+{
+  "error": "Configuration for \"temperature\" already exists for this sensor"
+}
+```
+
+---
+
+#### Get Sensor Configurations
+```
+GET /api/devices/sensors/{id}/configurations/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "sensor_name": "temperature",
+    "sensor_type": "TEMPERATURE",
+    "unit": "°C",
+    "description": "Room temperature sensor",
+    "threshold": 25.0,
+    "min_value": -10.0,
+    "max_value": 50.0,
+    "created_at": "2026-01-27T10:05:00Z",
+    "updated_at": "2026-01-27T10:05:00Z"
+  },
+  {
+    "id": 2,
+    "sensor_name": "humidity",
+    "sensor_type": "HUMIDITY",
+    "unit": "%",
+    "description": "Room humidity sensor",
+    "threshold": 60.0,
+    "min_value": 0.0,
+    "max_value": 100.0,
+    "created_at": "2026-01-27T10:05:00Z",
+    "updated_at": "2026-01-27T10:05:00Z"
+  }
+]
+```
+
+**Response (No Configurations):** `200 OK`
+```json
+[]
+```
+
+---
+
+#### Update Sensor Configuration
+```
+PATCH /api/devices/sensors/{id}/update_configuration/?config_id=1
+Content-Type: application/json
+
+{
+  "threshold": 28.0,
+  "description": "Updated temperature sensor"
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Query Parameters:**
+- `config_id` (required) - ID of the configuration to update
+
+**Request Parameters (all optional):**
+- `sensor_name` - Configuration name for the sensor parameter
+- `sensor_type` - Type of sensor (TEMPERATURE, HUMIDITY, CO2, etc.)
+- `unit` - Measurement unit (°C, %, ppm, µg/m³, etc.)
+- `description` - Description of the sensor configuration
+- `threshold` - Threshold value for alerts
+- `min_value` - Minimum acceptable value
+- `max_value` - Maximum acceptable value
+
+**Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "sensor_name": "temperature",
+  "sensor_type": "TEMPERATURE",
+  "unit": "°C",
+  "description": "Updated temperature sensor",
+  "threshold": 28.0,
+  "min_value": -10.0,
+  "max_value": 50.0,
+  "created_at": "2026-01-27T10:05:00Z",
+  "updated_at": "2026-01-27T10:15:00Z"
+}
+```
+
+**Error Responses:**
+
+Missing config_id: `400 Bad Request`
+```json
+{
+  "error": "config_id query parameter is required"
+}
+```
+
+Configuration not found: `404 Not Found`
+```json
+{
+  "error": "Configuration with id 999 not found"
+}
+```
+
+Duplicate sensor_name: `409 Conflict`
+```json
+{
+  "error": "Configuration for \"temperature\" already exists for this sensor"
+}
+```
+
+---
+
+#### Delete Sensor Configuration
+```
+DELETE /api/devices/sensors/{id}/delete_configuration/?config_id=1
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Query Parameters:**
+- `config_id` (required) - ID of the configuration to delete
+
+**Response:** `200 OK`
+```json
+{
+  "detail": "Configuration \"temperature\" has been successfully deleted."
+}
+```
+
+**Error Responses:**
+
+Missing config_id: `400 Bad Request`
+```json
+{
+  "error": "config_id query parameter is required"
+}
+```
+
+Configuration not found: `404 Not Found`
+```json
+{
+  "error": "Configuration with id 999 not found"
+}
+```
+
 ---
 
 ### Sensor Groups
@@ -662,7 +872,7 @@ Content-Type: application/json
 }
 ```
 
-**Authentication:** ✅ Required (JWT Cookie)  
+**Authentication:** ✅ Required (JWT Cookie)    
 **Permissions:** ✅ **Admin only**
 
 **Response:** `200 OK`
