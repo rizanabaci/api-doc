@@ -611,6 +611,51 @@ DELETE /api/devices/sensors/{id}/
   "detail": "Sensor \"Sensor-001\" has been successfully deleted."
 }
 ```
+### sensor config choices
+
+SENSOR_CONFIG_CHOICES = [
+        # Temperature & Humidity
+        ('temp_c', 'Temperature (Celsius)'),
+        ('temp_f', 'Temperature (Fahrenheit)'),
+        ('humidity', 'Humidity (%)'),
+        
+        # Air Quality & Particles
+        ('pm1', 'Particulate Matter 1µm'),
+        ('pm10', 'Particulate Matter 10µm'),
+        ('pm25', 'Particulate Matter 2.5µm'),
+        ('tvoc', 'Total Volatile Organic Compounds'),
+        ('co2', 'Carbon Dioxide (ppm)'),
+        ('co', 'Carbon Monoxide (ppm)'),
+        ('no2', 'Nitrogen Dioxide (ppb)'),
+        ('nh3', 'Ammonia (ppb)'),
+        
+        # AQI Indices
+        ('aqi', 'Air Quality Index'),
+        ('pm10aqi', 'PM10 AQI'),
+        ('pm25aqi', 'PM2.5 AQI'),
+        ('coaqi', 'CO AQI'),
+        ('no2aqi', 'NO2 AQI'),
+        
+        # Environmental
+        ('light', 'Light Level (lux)'),
+        ('pressure_hpa', 'Atmospheric Pressure (hPa)'),
+        
+        # Audio & Motion
+        ('noise', 'Noise Level (dB)'),
+        ('motion', 'Motion Detection'),
+        ('aggression', 'Aggression Detection'),
+        ('gunshot', 'Gunshot Detection'),
+        
+        # Health Indices
+        ('health_index', 'Overall Health Index'),
+        ('hi_co2', 'CO2 Health Index'),
+        ('hi_hum', 'Humidity Health Index'),
+        ('hi_pm1', 'PM1 Health Index'),
+        ('hi_pm10', 'PM10 Health Index'),
+        ('hi_pm25', 'PM2.5 Health Index'),
+        ('hi_tvoc', 'TVOC Health Index'),
+        ('hi_no2', 'NO2 Health Index'),
+    ]
 
 #### Add Sensor Configuration
 ```
