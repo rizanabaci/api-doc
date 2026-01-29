@@ -1,7 +1,5 @@
 # HALO ABACI - API Documentation
 
-https://www.figma.com/board/b7aW2tSNbPaGMNwNnlESe3/Untitled?node-id=0-1&p=f&t=aZe317pDsoNyUQM6-0
-
 **Base URL:** `http://localhost:8000/api/`
 
 **Version:** 1.0  
@@ -42,6 +40,10 @@ All protected endpoints use **JWT Token-based authentication via HttpOnly cookie
 2. [Users API](#users-api)
 3. [Devices API](#devices-api)
 4. [Administration API](#administration-api)
+   - [Areas](#areas)
+   - [Alerts](#alerts)
+   - [Alert Filters](#alert-filters)
+   - [Actions](#actions)
 5. [Error Handling](#error-handling)
 6. [Status Codes](#status-codes)
 
@@ -616,7 +618,6 @@ DELETE /api/devices/sensors/{id}/
 ### sensor config choices
 
 SENSOR_CONFIG_CHOICES = [
-
         # Temperature & Humidity
         ('temp_c', 'Temperature (Celsius)'),
         ('temp_f', 'Temperature (Fahrenheit)'),
@@ -666,14 +667,12 @@ POST /api/devices/sensors/{id}/add_configuration/
 Content-Type: application/json
 
 {
-  "sensor_name": "temperature",
-  "sensor_type": "TEMPERATURE",
-  "unit": "°C",
-  "description": "Room temperature sensor",
-  "threshold": 25.0,
-  "min_value": -10.0,
-  "max_value": 50.0
-}
+        "sensor_name": "temp_c",
+        "enabled": true,
+        "min_value": -10.0,
+        "threshold": 25.0,
+        "max_value": 50.0,
+    }
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
@@ -693,9 +692,6 @@ Content-Type: application/json
 {
   "id": 1,
   "sensor_name": "temperature",
-  "sensor_type": "TEMPERATURE",
-  "unit": "°C",
-  "description": "Room temperature sensor",
   "threshold": 25.0,
   "min_value": -10.0,
   "max_value": 50.0,
@@ -729,27 +725,14 @@ GET /api/devices/sensors/{id}/configurations/
   {
     "id": 1,
     "sensor_name": "temperature",
-    "sensor_type": "TEMPERATURE",
-    "unit": "°C",
-    "description": "Room temperature sensor",
+    "enabled":"True",
     "threshold": 25.0,
     "min_value": -10.0,
     "max_value": 50.0,
     "created_at": "2026-01-27T10:05:00Z",
     "updated_at": "2026-01-27T10:05:00Z"
   },
-  {
-    "id": 2,
-    "sensor_name": "humidity",
-    "sensor_type": "HUMIDITY",
-    "unit": "%",
-    "description": "Room humidity sensor",
-    "threshold": 60.0,
-    "min_value": 0.0,
-    "max_value": 100.0,
-    "created_at": "2026-01-27T10:05:00Z",
-    "updated_at": "2026-01-27T10:05:00Z"
-  }
+  
 ]
 ```
 
@@ -1568,6 +1551,324 @@ DELETE /api/administration/areas/{id}/
 **Permissions:** ✅ **Admin only**
 
 **Response:** `200 OK`
+
+---
+
+### Alerts
+
+#### List All Alerts
+```
+GET /api/administration/alerts/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Query Parameters:**
+- `status` - Filter by status: `active`, `acknowledged`, `resolved`, `dismissed`, `suspended`
+- `type` - Filter by alert type: `sensor_offline`, `threshold_exceeded`, `anomaly_detected`, `device_error`, `high_air_quality`, `motion_detected`, `aggression_detected`, `gunshot_detected`
+- `sensor_id` - Filter by sensor
+- `area_id` - Filter by area
+- `search` - Search by description
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "type": "threshold_exceeded",
+    "status": "active",
+    "description": "AQI level exceeded safe threshold",
+    "remarks": "Additional notes about the alert",
+    "sensor": {
+      "id": 1,
+      "name": "HaloSensor_Room101"
+    },
+    "area": {
+      "id": 1,
+      "name": "Building A / Floor 1 / Room 101"
+    },
+    "user_acknowledged": null,
+    "time_of_acknowledgment": null,
+    "created_at": "2026-01-29T10:30:00Z",
+    "updated_at": "2026-01-29T10:30:00Z"
+  }
+]
+```
+
+#### Get Alert by ID
+```
+GET /api/administration/alerts/{id}/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Response:** `200 OK`
+
+#### Acknowledge Alert
+```
+POST /api/administration/alerts/{id}/acknowledge/
+Content-Type: application/json
+
+{
+  "remarks": "Issue noted, investigating"
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `200 OK`
+```json
+{
+  "status": "acknowledged",
+  "user_acknowledged": "john_admin",
+  "time_of_acknowledgment": "2026-01-29T10:35:00Z",
+  "remarks": "Issue noted, investigating"
+}
+```
+
+#### Update Alert Status
+```
+PATCH /api/administration/alerts/{id}/
+Content-Type: application/json
+
+{
+  "status": "resolved",
+  "remarks": "Issue resolved"
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `200 OK`
+
+---
+
+### Alert Filters
+
+#### List All Alert Filters
+```
+GET /api/administration/alert-filters/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Query Parameters:**
+- `search` - Search by name or description
+- `area_id` - Filter by area
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "HighAirQuality_Critical",
+    "description": "Trigger actions for critical air quality alerts",
+    "area_list": [1, 2, 3],
+    "sensor_config_types": [5, 6, 7],
+    "action_for_min": true,
+    "action_for_max": true,
+    "action_for_threshold": true,
+    "sensor_groups": [1],
+    "actions": [1, 2, 3],
+    "created_at": "2026-01-29T10:00:00Z",
+    "updated_at": "2026-01-29T10:00:00Z"
+  }
+]
+```
+
+#### Get Alert Filter by ID
+```
+GET /api/administration/alert-filters/{id}/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Response:** `200 OK`
+
+#### Create Alert Filter
+```
+POST /api/administration/alert-filters/
+Content-Type: application/json
+
+{
+  "name": "HighAirQuality",
+  "description": "Alert on high AQI readings",
+  "area_list": [1],
+  "sensor_config_types": [5],
+  "action_for_max": true,
+  "action_for_threshold": true,
+  "actions": [1]
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `201 Created`
+
+#### Update Alert Filter
+```
+PUT /api/administration/alert-filters/{id}/
+PATCH /api/administration/alert-filters/{id}/
+Content-Type: application/json
+
+{
+  "name": "HighAirQuality_Updated",
+  "actions": [1, 2, 3]
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `200 OK`
+
+#### Delete Alert Filter
+```
+DELETE /api/administration/alert-filters/{id}/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `204 No Content`
+
+---
+
+### Actions
+
+#### List All Actions
+```
+GET /api/administration/actions/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Query Parameters:**
+- `type` - Filter by type: `email`, `sms`, `push_notification`, `webhook`, `slack`, `teams`, `custom`
+- `is_active` - Filter by active status: `true`, `false`
+- `search` - Search by name
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "SendAQIAlert_ToBuildings",
+    "type": "email",
+    "recipients": [1, 2, 5],
+    "device_list": "device_001,device_002,device_003",
+    "message_type": "critical",
+    "message_template": "Alert: {alert_type} detected in {area_name}. Sensor: {sensor_name}. Description: {description}",
+    "is_active": true,
+    "created_by": 1,
+    "http_method": null,
+    "created_at": "2026-01-29T10:00:00Z",
+    "updated_at": "2026-01-29T10:00:00Z"
+  }
+]
+```
+
+#### Get Action by ID
+```
+GET /api/administration/actions/{id}/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** 
+- Admin: Full access
+- Viewer: Read-only
+
+**Response:** `200 OK`
+
+#### Create Action
+```
+POST /api/administration/actions/
+Content-Type: application/json
+
+{
+  "name": "EmailAdmins",
+  "type": "email",
+  "recipients": [1, 2],
+  "message_template": "Alert: {alert_type} at {area_name}",
+  "is_active": true
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `201 Created`
+
+#### Update Action
+```
+PUT /api/administration/actions/{id}/
+PATCH /api/administration/actions/{id}/
+Content-Type: application/json
+
+{
+  "is_active": false,
+  "recipients": [1, 2, 3],
+  "message_template": "Updated template: {alert_type} in {area_name}"
+}
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `200 OK`
+
+#### Delete Action
+```
+DELETE /api/administration/actions/{id}/
+```
+
+**Authentication:** ✅ Required (JWT Cookie)  
+**Permissions:** ✅ **Admin only**
+
+**Response:** `204 No Content`
+
+---
+
+### Action Types Reference
+
+| Type | Description | Configuration |
+|------|-------------|----------------|
+| email | Email notifications | Send to user email addresses |
+| sms | SMS text messages | Send to phone numbers |
+| push_notification | Mobile push notifications | Send to device IDs |
+| webhook | HTTP POST to external URL | Requires webhook URL and HTTP method |
+| slack | Slack channel message | Requires Slack webhook URL |
+| teams | Microsoft Teams message | Requires Teams webhook URL |
+| custom | Custom action logic | Custom implementation |
+
+### Message Template Placeholders
+
+Available placeholders for `message_template`:
+- `{alert_type}` - Type of the alert (e.g., "threshold_exceeded")
+- `{sensor_name}` - Name of the sensor that triggered alert
+- `{area_name}` - Area where the alert occurred
+- `{description}` - Alert description
+- `{timestamp}` - Alert timestamp
+- `{value}` - Current sensor value
+- `{remarks}` - Alert remarks/notes
 
 ---
 
@@ -2492,5 +2793,5 @@ DELETE /api/administration/areas/{id}/
 
 ---
 
-**Last Updated:** January 16, 2026  
+**Last Updated:** January 29, 2026  
 **API Version:** 1.0
