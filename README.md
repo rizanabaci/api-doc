@@ -2047,6 +2047,7 @@ GET /api/administration/actions/
     "message_type": "critical",
     "message_template": "Alert: {alert_type} detected in {area_name}. Sensor: {sensor_name}. Description: {description}",
     "http_method": "POST",
+    "webhook_url": "https://external-system.com/alerts/webhook",
     "is_active": true,
     "created_by_username": "admin",
     "created_at": "2026-01-29T10:00:00Z",
@@ -2068,7 +2069,8 @@ GET /api/administration/actions/
 - `device_list_ids` - Array of sensor IDs (write-only)
 - `message_type` - Type of message (optional): info, warning, critical
 - `message_template` - Template for message body with placeholders (optional)
-- `http_method` - HTTP method for webhook actions (optional): GET, POST, etc.
+- `http_method` - HTTP method for webhook actions (optional): GET, POST, PUT, PATCH, DELETE, HEAD
+- `webhook_url` - URL endpoint for webhook actions (optional, required for webhook type)
 - `is_active` - Whether action is enabled (default: true)
 - `created_by_username` - Username of creator (read-only)
 - `created_at` - Action creation timestamp (read-only)
@@ -2105,6 +2107,7 @@ Content-Type: application/json
   "message_template": "Alert: {alert_type} at {area_name}. Sensor: {sensor_name}",
   "message_type": "critical",
   "http_method": "POST",
+  "webhook_url": "https://external-system.com/alerts/webhook",
   "is_active": true
 }
 ```
@@ -2127,7 +2130,8 @@ Content-Type: application/json
   - `{timestamp}` - Alert timestamp
   - `{value}` - Current sensor value
   - `{remarks}` - Alert remarks
-- `message_type` (optional) - Type of message: info, warning, critical
+- `message_type` (optional) - Type of message: info, warning, criticalPATCH, DELETE, HEAD
+- `webhook_url` (optional) - URL endpoint for webhook actions (required when type is webhook)
 - `http_method` (optional) - HTTP method for webhooks: GET, POST, PUT, DELETE, PATCH
 - `is_active` (optional, default: true) - Whether action is enabled
 
@@ -2146,6 +2150,7 @@ Content-Type: application/json
   "device_list_ids": [1, 2],
   "message_type": "critical",
   "message_template": "Alert: {alert_type} at {area_name}. Sensor: {sensor_name}",
+  "webhook_url": "https://external-system.com/alerts/webhook",
   "http_method": "POST",
   "is_active": true,
   "created_by_username": "john_admin",
@@ -2167,7 +2172,9 @@ Content-Type: application/json
   "recipient_ids": [1, 2, 3],
   "user_group_ids": [1, 2],
   "device_list_ids": [1, 2, 3],
-  "message_template": "Updated template: {alert_type} in {area_name}",
+  "message_template": "Updat,
+  "webhook_url": "https://external-system.com/alerts/webhook",
+  "http_method": "POST"ed template: {alert_type} in {area_name}",
   "message_type": "critical"
 }
 ```
@@ -2181,7 +2188,8 @@ Content-Type: application/json
 - `recipient_ids` - Updated array of user IDs (replaces existing)
 - `user_group_ids` - Updated array of user group IDs (replaces existing)
 - `device_type` - Updated device type: HALO
-- `device_list_ids` - Updated array of sensor IDs (replaces existing)
+- `device_list_ids` - Updated array of sensor IDs : GET, POST, PUT, PATCH, DELETE, HEAD
+- `webhook_url` - Updated URL endpoint for webhook actions(replaces existing)
 - `message_template` - Updated message template with placeholders
 - `message_type` - Updated message type: info, warning, critical
 - `http_method` - Updated HTTP method for webhooks
@@ -2200,6 +2208,7 @@ Content-Type: application/json
   "device_type": "HALO",
   "device_list": [...],
   "device_list_ids": [1, 2, 3],
+  "webhook_url": "https://external-system.com/alerts/webhook",
   "message_type": "critical",
   "message_template": "Updated template: {alert_type} in {area_name}",
   "http_method": "POST",
@@ -2222,13 +2231,23 @@ DELETE /api/administration/actions/{id}/
 
 **Response:** `204 No Content`
 
----
+---HTTP Method Choices
+
+Valid HTTP methods for webhook actions:
+- `GET` - GET request
+- `POST` - POST request
+- `PUT` - PUT request (full update)
+- `PATCH` - PATCH request (partial update)
+- `DELETE` - DELETE request
+- `HEAD` - HEAD request
 
 ### Action Types Reference
 
 | Type | Description | Configuration |
 |------|-------------|----------------|
 | email | Email notifications | Send to user email addresses |
+| sms | SMS text messages | Send to phone numbers |
+| webhook | HTTP request to external URL | Requires webhook_url, http_
 | sms | SMS text messages | Send to phone numbers |
 | webhook | HTTP POST/GET to external URL | Requires webhook URL and HTTP method |
 | device_notification | Mobile/Device push notifications | Send to device IDs from device_list |
