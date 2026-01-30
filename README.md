@@ -1105,13 +1105,33 @@ GET /api/devices/alerts/
 - Viewer: Read-only
 
 **Query Parameters:**
-- `type` - Filter by alert type
+- `type` - Filter by alert type (sensor_offline, threshold_exceeded, anomaly_detected, device_error, high_air_quality, motion_detected, aggression_detected, gunshot_detected, other)
 - `status` - Filter by alert status (active, acknowledged, resolved, dismissed, suspended)
 - `sensor` - Filter by sensor ID
 - `area` - Filter by area ID
 - `search` - Search in type, sensor name, area name, description
 
 **Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "type": "threshold_exceeded",
+    "status": "active",
+    "description": "CO2 levels exceeded threshold of 1000 ppm",
+    "remarks": "Needs ventilation",
+    "sensor": 1,
+    "sensor_name": "Sensor-001",
+    "area": 1,
+    "area_name": "Office Building A",
+    "user_acknowledged": null,
+    "user_acknowledged_username": null,
+    "time_of_acknowledgment": null,
+    "created_at": "2026-01-23T10:05:00Z",
+    "updated_at": "2026-01-23T10:05:00Z"
+  }
+]
+```
 
 ---
 
@@ -1129,24 +1149,37 @@ GET /api/devices/alerts/{id}/
 ```json
 {
   "id": 1,
-  "type": "high_co2",
+  "type": "threshold_exceeded",
   "status": "active",
   "description": "CO2 levels exceeded threshold of 1000 ppm",
   "remarks": "Needs ventilation",
-  "sensor": {
-    "id": 1,
-    "name": "Sensor-001"
-  },
-  "area": {
-    "id": 1,
-    "name": "Office Building A"
-  },
+  "sensor": 1,
+  "sensor_name": "Sensor-001",
+  "area": 1,
+  "area_name": "Office Building A",
   "user_acknowledged": null,
+  "user_acknowledged_username": null,
   "time_of_acknowledgment": null,
   "created_at": "2026-01-23T10:05:00Z",
   "updated_at": "2026-01-23T10:05:00Z"
 }
 ```
+
+**Response Fields:**
+- `id` - Alert ID (read-only)
+- `type` - Alert type (required): sensor_offline, threshold_exceeded, anomaly_detected, device_error, high_air_quality, motion_detected, aggression_detected, gunshot_detected, other
+- `status` - Alert status (required): active, acknowledged, resolved, dismissed, suspended
+- `description` - Detailed description of the alert (required)
+- `remarks` - Additional notes about the alert (optional, but required when status is "acknowledged")
+- `sensor` - Sensor ID that triggered the alert (required)
+- `sensor_name` - Sensor name (read-only, derived from sensor)
+- `area` - Area ID where alert originated (required)
+- `area_name` - Area name (read-only, derived from area)
+- `user_acknowledged` - User ID who acknowledged the alert (read-only, auto-set when status becomes "acknowledged")
+- `user_acknowledged_username` - Username of acknowledging user (read-only)
+- `time_of_acknowledgment` - Timestamp of acknowledgment (read-only, auto-set when status becomes "acknowledged")
+- `created_at` - Alert creation timestamp (read-only)
+- `updated_at` - Last update timestamp (read-only)
 
 ---
 
@@ -1156,7 +1189,7 @@ POST /api/devices/alerts/
 Content-Type: application/json
 
 {
-  "type": "high_temperature",
+  "type": "threshold_exceeded",
   "status": "active",
   "description": "Temperature exceeded safe threshold",
   "remarks": "Check HVAC system",
@@ -1168,7 +1201,33 @@ Content-Type: application/json
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters:**
+- `type` (required) - Alert type: sensor_offline, threshold_exceeded, anomaly_detected, device_error, high_air_quality, motion_detected, aggression_detected, gunshot_detected, other
+- `status` (optional, default: "active") - Alert status: active, acknowledged, resolved, dismissed, suspended
+- `description` (required) - Detailed description of the alert
+- `remarks` (optional) - Additional notes/remarks about the alert
+- `sensor` (required) - Sensor ID that triggered the alert
+- `area` (required) - Area ID where the alert occurred
+
 **Response:** `201 Created`
+```json
+{
+  "id": 1,
+  "type": "threshold_exceeded",
+  "status": "active",
+  "description": "Temperature exceeded safe threshold",
+  "remarks": "Check HVAC system",
+  "sensor": 1,
+  "sensor_name": "Sensor-001",
+  "area": 1,
+  "area_name": "Office Building A",
+  "user_acknowledged": null,
+  "user_acknowledged_username": null,
+  "time_of_acknowledgment": null,
+  "created_at": "2026-01-23T10:05:00Z",
+  "updated_at": "2026-01-23T10:05:00Z"
+}
+```
 
 ---
 
@@ -1180,15 +1239,42 @@ Content-Type: application/json
 
 {
   "status": "acknowledged",
-  "remarks": "Issue resolved, HVAC serviced",
-  "user_acknowledged": 1
+  "remarks": "Issue noted, investigating"
 }
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters (all optional for PATCH, at least one required):**
+- `type` - Alert type: sensor_offline, threshold_exceeded, anomaly_detected, device_error, high_air_quality, motion_detected, aggression_detected, gunshot_detected, other
+- `status` - Alert status: active, acknowledged, resolved, dismissed, suspended
+- `description` - Updated alert description
+- `remarks` - Updated remarks (required if changing status to "acknowledged")
+- `sensor` - Sensor ID
+- `area` - Area ID
+
+**Note:** When updating status to "acknowledged", remarks must be provided and user_acknowledged/time_of_acknowledgment are automatically set by the system.
+
 **Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "type": "threshold_exceeded",
+  "status": "acknowledged",
+  "description": "Temperature exceeded safe threshold",
+  "remarks": "Issue noted, investigating",
+  "sensor": 1,
+  "sensor_name": "Sensor-001",
+  "area": 1,
+  "area_name": "Office Building A",
+  "user_acknowledged": 1,
+  "user_acknowledged_username": "john_admin",
+  "time_of_acknowledgment": "2026-01-23T10:15:00Z",
+  "created_at": "2026-01-23T10:05:00Z",
+  "updated_at": "2026-01-23T10:15:00Z"
+}
+```
 
 ---
 
@@ -1665,7 +1751,7 @@ GET /api/devices/alert-filters/
 
 **Query Parameters:**
 - `search` - Search by name or description
-- `area_id` - Filter by area
+- `area_id` - Filter by area ID
 
 **Response:** `200 OK`
 ```json
@@ -1674,18 +1760,77 @@ GET /api/devices/alert-filters/
     "id": 1,
     "name": "HighAirQuality_Critical",
     "description": "Trigger actions for critical air quality alerts",
-    "area_list": [1, 2, 3],
-    "sensor_config_types": [5, 6, 7],
+    "area_list": [
+      {
+        "id": 1,
+        "name": "Building A"
+      },
+      {
+        "id": 2,
+        "name": "Building B"
+      }
+    ],
+    "area_ids": [1, 2],
+    "sensor_config_types": [
+      {
+        "id": 5,
+        "sensor_name": "co2",
+        "threshold": 1000.0
+      },
+      {
+        "id": 6,
+        "sensor_name": "pm25",
+        "threshold": 35.0
+      }
+    ],
+    "sensor_config_ids": [5, 6],
+    "sensor_groups": [
+      {
+        "id": 1,
+        "name": "Office Sensors"
+      }
+    ],
+    "sensor_group_ids": [1],
     "action_for_min": true,
     "action_for_max": true,
-    "action_for_threshold": true,
-    "sensor_groups": [1],
-    "actions": [1, 2, 3],
+    "actions": [
+      {
+        "id": 1,
+        "name": "SendAQIAlert_ToBuildings",
+        "type": "email"
+      }
+    ],
+    "action_ids": [1],
+    "weekdays": [0, 1, 2, 3, 4],
+    "start_time": "08:00:00",
+    "end_time": "18:00:00",
     "created_at": "2026-01-29T10:00:00Z",
     "updated_at": "2026-01-29T10:00:00Z"
   }
 ]
 ```
+
+**Response Fields:**
+- `id` - Alert filter ID (read-only)
+- `name` - Name of the alert filter (required, must be unique)
+- `description` - Description of the alert filter (optional)
+- `area_list` - List of areas included in this filter (optional, read-only)
+- `area_ids` - Array of area IDs (write-only)
+- `sensor_config_types` - List of sensor configurations included (optional, read-only)
+- `sensor_config_ids` - Array of sensor configuration IDs (write-only)
+- `sensor_groups` - List of sensor groups included (optional, read-only)
+- `sensor_group_ids` - Array of sensor group IDs (write-only)
+- `action_for_min` - Whether to take action for minimum value breaches (default: true)
+- `action_for_max` - Whether to take action for maximum value breaches (default: true)
+- `actions` - List of actions to execute when alerts match (optional, read-only)
+- `action_ids` - Array of action IDs (write-only)
+- `weekdays` - Array of active weekdays (0=Mon, 6=Sun) (optional, empty=all days)
+- `start_time` - Start time for filter activation each day in HH:MM format (optional)
+- `end_time` - End time for filter activation each day in HH:MM format (optional)
+- `created_at` - Filter creation timestamp (read-only)
+- `updated_at` - Last update timestamp (read-only)
+
+---
 
 #### Get Alert Filter by ID
 ```
@@ -1697,7 +1842,9 @@ GET /api/devices/alert-filters/{id}/
 - Admin: Full access
 - Viewer: Read-only
 
-**Response:** `200 OK`
+**Response:** `200 OK` - Same as list response format
+
+---
 
 #### Create Alert Filter
 ```
@@ -1707,18 +1854,59 @@ Content-Type: application/json
 {
   "name": "HighAirQuality",
   "description": "Alert on high AQI readings",
-  "area_list": [1],
-  "sensor_config_types": [5],
+  "area_ids": [1, 2],
+  "sensor_config_ids": [5, 6],
+  "sensor_group_ids": [1],
   "action_for_max": true,
   "action_for_threshold": true,
-  "actions": [1]
+  "action_ids": [1, 2],
+  "weekdays": [0, 1, 2, 3, 4],
+  "start_time": "08:00:00",
+  "end_time": "18:00:00"
 }
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters:**
+- `name` (required) - Name of the alert filter (must be unique)
+- `description` (optional) - Description of the alert filter
+- `area_ids` (optional) - Array of area IDs to include in this filter
+- `sensor_config_ids` (optional) - Array of sensor configuration IDs to monitor
+- `sensor_group_ids` (optional) - Array of sensor group IDs to include
+- `action_for_min` (optional, default: true) - Take action for minimum value breaches
+- `action_for_max` (optional, default: true) - Take action for maximum value breaches
+- `action_ids` (optional) - Array of action IDs to execute when alerts match
+- `weekdays` (optional) - Array of active weekdays (0=Monday through 6=Sunday). Empty array or omit for all days
+- `start_time` (optional) - Start time for filter activation (HH:MM:SS format)
+- `end_time` (optional) - End time for filter activation (HH:MM:SS format)
+
 **Response:** `201 Created`
+```json
+{
+  "id": 1,
+  "name": "HighAirQuality",
+  "description": "Alert on high AQI readings",
+  "area_list": [{...}],
+  "area_ids": [1, 2],
+  "sensor_config_types": [{...}],
+  "sensor_config_ids": [5, 6],
+  "sensor_groups": [{...}],
+  "sensor_group_ids": [1],
+  "action_for_min": true,
+  "action_for_max": true,
+  "actions": [{...}],
+  "action_ids": [1, 2],
+  "weekdays": [0, 1, 2, 3, 4],
+  "start_time": "08:00:00",
+  "end_time": "18:00:00",
+  "created_at": "2026-01-29T10:00:00Z",
+  "updated_at": "2026-01-29T10:00:00Z"
+}
+```
+
+---
 
 #### Update Alert Filter
 ```
@@ -1728,14 +1916,54 @@ Content-Type: application/json
 
 {
   "name": "HighAirQuality_Updated",
-  "actions": [1, 2, 3]
+  "action_ids": [1, 2, 3],
+  "weekdays": [1, 2, 3, 4, 5],
+  "start_time": "09:00:00",
+  "end_time": "17:00:00"
 }
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters (all optional for PATCH):**
+- `name` - Updated name of the alert filter (must be unique)
+- `description` - Updated description
+- `area_ids` - Updated array of area IDs (replaces existing)
+- `sensor_config_ids` - Updated array of sensor configuration IDs (replaces existing)
+- `sensor_group_ids` - Updated array of sensor group IDs (replaces existing)
+- `action_for_min` - Updated action for min breaches
+- `action_for_max` - Updated action for max breaches
+- `action_ids` - Updated array of action IDs (replaces existing)
+- `weekdays` - Updated array of active weekdays
+- `start_time` - Updated start time
+- `end_time` - Updated end time
+
 **Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "HighAirQuality_Updated",
+  "description": "Alert on high AQI readings",
+  "area_list": [{...}],
+  "area_ids": [1, 2],
+  "sensor_config_types": [{...}],
+  "sensor_config_ids": [5, 6],
+  "sensor_groups": [{...}],
+  "sensor_group_ids": [1],
+  "action_for_min": true,
+  "action_for_max": true,
+  "actions": [{...}],
+  "action_ids": [1, 2, 3],
+  "weekdays": [1, 2, 3, 4, 5],
+  "start_time": "09:00:00",
+  "end_time": "17:00:00",
+  "created_at": "2026-01-29T10:00:00Z",
+  "updated_at": "2026-01-29T10:30:00Z"
+}
+```
+
+---
 
 #### Delete Alert Filter
 ```
@@ -1762,8 +1990,8 @@ GET /api/administration/actions/
 - Viewer: Read-only
 
 **Query Parameters:**
-- `type` - Filter by type: `email`, `sms`, `webhook`, `device_notification`
-- `is_active` - Filter by active status: `true`, `false`
+- `type` - Filter by type: email, sms, webhook, device_notification
+- `is_active` - Filter by active status: true, false
 - `search` - Search by name
 
 **Response:** `200 OK`
@@ -1773,20 +2001,80 @@ GET /api/administration/actions/
     "id": 1,
     "name": "SendAQIAlert_ToBuildings",
     "type": "email",
-    "recipients": [1, 2, 5],
-    "user_groups": [1, 2],
+    "recipients": [
+      {
+        "id": 1,
+        "username": "john_admin",
+        "email": "john@example.com",
+        "first_name": "John",
+        "last_name": "Doe"
+      },
+      {
+        "id": 2,
+        "username": "jane_viewer",
+        "email": "jane@example.com",
+        "first_name": "Jane",
+        "last_name": "Smith"
+      }
+    ],
+    "recipient_ids": [1, 2],
+    "user_groups": [
+      {
+        "id": 1,
+        "name": "Security Team",
+        "description": "Security and surveillance personnel"
+      }
+    ],
+    "user_group_ids": [1],
     "device_type": "HALO",
-    "device_list": "device_001,device_002,device_003",
+    "device_list": [
+      {
+        "id": 1,
+        "name": "Sensor-001",
+        "sensor_type": "HALO_3C",
+        "is_active": true,
+        "is_online": true
+      },
+      {
+        "id": 2,
+        "name": "Sensor-002",
+        "sensor_type": "HALO_IOT",
+        "is_active": true,
+        "is_online": true
+      }
+    ],
+    "device_list_ids": [1, 2],
     "message_type": "critical",
     "message_template": "Alert: {alert_type} detected in {area_name}. Sensor: {sensor_name}. Description: {description}",
+    "http_method": "POST",
     "is_active": true,
     "created_by_username": "admin",
-    "http_method": "POST",
     "created_at": "2026-01-29T10:00:00Z",
     "updated_at": "2026-01-29T10:00:00Z"
   }
 ]
 ```
+
+**Response Fields:**
+- `id` - Action ID (read-only)
+- `name` - Name of the action (required)
+- `type` - Action type (required): email, sms, webhook, device_notification
+- `recipients` - List of users who will receive notifications (read-only)
+- `recipient_ids` - Array of user IDs (write-only)
+- `user_groups` - List of user groups to notify (read-only)
+- `user_group_ids` - Array of user group IDs (write-only)
+- `device_type` - Type of device for push notifications (optional): HALO
+- `device_list` - List of sensors for push notifications (read-only)
+- `device_list_ids` - Array of sensor IDs (write-only)
+- `message_type` - Type of message (optional): info, warning, critical
+- `message_template` - Template for message body with placeholders (optional)
+- `http_method` - HTTP method for webhook actions (optional): GET, POST, etc.
+- `is_active` - Whether action is enabled (default: true)
+- `created_by_username` - Username of creator (read-only)
+- `created_at` - Action creation timestamp (read-only)
+- `updated_at` - Last update timestamp (read-only)
+
+---
 
 #### Get Action by ID
 ```
@@ -1798,7 +2086,9 @@ GET /api/administration/actions/{id}/
 - Admin: Full access
 - Viewer: Read-only
 
-**Response:** `200 OK`
+**Response:** `200 OK` - Same as list response format
+
+---
 
 #### Create Action
 ```
@@ -1806,14 +2096,15 @@ POST /api/administration/actions/
 Content-Type: application/json
 
 {
-  "name": "EmailAdmins",
+  "name": "SendAQIAlert_ToBuildings",
   "type": "email",
-  "recipients": [1, 2],
-  "user_groups": [1],
+  "recipient_ids": [1, 2],
+  "user_group_ids": [1],
   "device_type": "HALO",
-  "device_list": "device_001,device_002",
-  "message_template": "Alert: {alert_type} at {area_name}",
-  "message_type": "warning",
+  "device_list_ids": [1, 2],
+  "message_template": "Alert: {alert_type} at {area_name}. Sensor: {sensor_name}",
+  "message_type": "critical",
+  "http_method": "POST",
   "is_active": true
 }
 ```
@@ -1821,7 +2112,49 @@ Content-Type: application/json
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters:**
+- `name` (required) - Name of the action
+- `type` (required) - Action type: email, sms, webhook, device_notification
+- `recipient_ids` (optional) - Array of user IDs to receive notifications
+- `user_group_ids` (optional) - Array of user group IDs to notify
+- `device_type` (optional) - Type of device: HALO
+- `device_list_ids` (optional) - Array of sensor IDs for push notifications
+- `message_template` (optional) - Template for message body with placeholders:
+  - `{alert_type}` - Type of the alert
+  - `{sensor_name}` - Name of the sensor
+  - `{area_name}` - Area name
+  - `{description}` - Alert description
+  - `{timestamp}` - Alert timestamp
+  - `{value}` - Current sensor value
+  - `{remarks}` - Alert remarks
+- `message_type` (optional) - Type of message: info, warning, critical
+- `http_method` (optional) - HTTP method for webhooks: GET, POST, PUT, DELETE, PATCH
+- `is_active` (optional, default: true) - Whether action is enabled
+
 **Response:** `201 Created`
+```json
+{
+  "id": 1,
+  "name": "SendAQIAlert_ToBuildings",
+  "type": "email",
+  "recipients": [...],
+  "recipient_ids": [1, 2],
+  "user_groups": [...],
+  "user_group_ids": [1],
+  "device_type": "HALO",
+  "device_list": [...],
+  "device_list_ids": [1, 2],
+  "message_type": "critical",
+  "message_template": "Alert: {alert_type} at {area_name}. Sensor: {sensor_name}",
+  "http_method": "POST",
+  "is_active": true,
+  "created_by_username": "john_admin",
+  "created_at": "2026-01-29T10:00:00Z",
+  "updated_at": "2026-01-29T10:00:00Z"
+}
+```
+
+---
 
 #### Update Action
 ```
@@ -1831,10 +2164,9 @@ Content-Type: application/json
 
 {
   "is_active": false,
-  "recipients": [1, 2, 3],
-  "user_groups": [1, 2],
-  "device_type": "HALO",
-  "device_list": "device_001,device_002,device_003",
+  "recipient_ids": [1, 2, 3],
+  "user_group_ids": [1, 2],
+  "device_list_ids": [1, 2, 3],
   "message_template": "Updated template: {alert_type} in {area_name}",
   "message_type": "critical"
 }
@@ -1843,7 +2175,42 @@ Content-Type: application/json
 **Authentication:** ✅ Required (JWT Cookie)  
 **Permissions:** ✅ **Admin only**
 
+**Request Parameters (all optional for PATCH):**
+- `name` - Updated name of the action
+- `type` - Updated action type: email, sms, webhook, device_notification
+- `recipient_ids` - Updated array of user IDs (replaces existing)
+- `user_group_ids` - Updated array of user group IDs (replaces existing)
+- `device_type` - Updated device type: HALO
+- `device_list_ids` - Updated array of sensor IDs (replaces existing)
+- `message_template` - Updated message template with placeholders
+- `message_type` - Updated message type: info, warning, critical
+- `http_method` - Updated HTTP method for webhooks
+- `is_active` - Updated active status
+
 **Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "SendAQIAlert_ToBuildings",
+  "type": "email",
+  "recipients": [...],
+  "recipient_ids": [1, 2, 3],
+  "user_groups": [...],
+  "user_group_ids": [1, 2],
+  "device_type": "HALO",
+  "device_list": [...],
+  "device_list_ids": [1, 2, 3],
+  "message_type": "critical",
+  "message_template": "Updated template: {alert_type} in {area_name}",
+  "http_method": "POST",
+  "is_active": false,
+  "created_by_username": "john_admin",
+  "created_at": "2026-01-29T10:00:00Z",
+  "updated_at": "2026-01-29T10:30:00Z"
+}
+```
+
+---
 
 #### Delete Action
 ```
