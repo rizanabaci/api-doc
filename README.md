@@ -1655,7 +1655,7 @@ Content-Type: application/json
 
 #### List All Alert Filters
 ```
-GET /api/administration/alert-filters/
+GET /api/devices/alert-filters/
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
@@ -1689,7 +1689,7 @@ GET /api/administration/alert-filters/
 
 #### Get Alert Filter by ID
 ```
-GET /api/administration/alert-filters/{id}/
+GET /api/devices/alert-filters/{id}/
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
@@ -1701,7 +1701,7 @@ GET /api/administration/alert-filters/{id}/
 
 #### Create Alert Filter
 ```
-POST /api/administration/alert-filters/
+POST /api/devices/alert-filters/
 Content-Type: application/json
 
 {
@@ -1722,8 +1722,8 @@ Content-Type: application/json
 
 #### Update Alert Filter
 ```
-PUT /api/administration/alert-filters/{id}/
-PATCH /api/administration/alert-filters/{id}/
+PUT /api/devices/alert-filters/{id}/
+PATCH /api/devices/alert-filters/{id}/
 Content-Type: application/json
 
 {
@@ -1739,7 +1739,7 @@ Content-Type: application/json
 
 #### Delete Alert Filter
 ```
-DELETE /api/administration/alert-filters/{id}/
+DELETE /api/devices/alert-filters/{id}/
 ```
 
 **Authentication:** ✅ Required (JWT Cookie)  
@@ -1762,7 +1762,7 @@ GET /api/administration/actions/
 - Viewer: Read-only
 
 **Query Parameters:**
-- `type` - Filter by type: `email`, `sms`, `push_notification`, `webhook`, `slack`, `teams`, `custom`
+- `type` - Filter by type: `email`, `sms`, `webhook`, `device_notification`
 - `is_active` - Filter by active status: `true`, `false`
 - `search` - Search by name
 
@@ -1774,12 +1774,13 @@ GET /api/administration/actions/
     "name": "SendAQIAlert_ToBuildings",
     "type": "email",
     "recipients": [1, 2, 5],
+    "user_groups": [1, 2],
     "device_list": "device_001,device_002,device_003",
     "message_type": "critical",
     "message_template": "Alert: {alert_type} detected in {area_name}. Sensor: {sensor_name}. Description: {description}",
     "is_active": true,
     "created_by": 1,
-    "http_method": null,
+    "http_method": "POST",
     "created_at": "2026-01-29T10:00:00Z",
     "updated_at": "2026-01-29T10:00:00Z"
   }
@@ -1807,7 +1808,9 @@ Content-Type: application/json
   "name": "EmailAdmins",
   "type": "email",
   "recipients": [1, 2],
+  "user_groups": [1],
   "message_template": "Alert: {alert_type} at {area_name}",
+  "message_type": "warning",
   "is_active": true
 }
 ```
@@ -1826,7 +1829,9 @@ Content-Type: application/json
 {
   "is_active": false,
   "recipients": [1, 2, 3],
-  "message_template": "Updated template: {alert_type} in {area_name}"
+  "user_groups": [1, 2],
+  "message_template": "Updated template: {alert_type} in {area_name}",
+  "message_type": "critical"
 }
 ```
 
@@ -1853,11 +1858,8 @@ DELETE /api/administration/actions/{id}/
 |------|-------------|----------------|
 | email | Email notifications | Send to user email addresses |
 | sms | SMS text messages | Send to phone numbers |
-| push_notification | Mobile push notifications | Send to device IDs |
-| webhook | HTTP POST to external URL | Requires webhook URL and HTTP method |
-| slack | Slack channel message | Requires Slack webhook URL |
-| teams | Microsoft Teams message | Requires Teams webhook URL |
-| custom | Custom action logic | Custom implementation |
+| webhook | HTTP POST/GET to external URL | Requires webhook URL and HTTP method |
+| device_notification | Mobile/Device push notifications | Send to device IDs from device_list |
 
 ### Message Template Placeholders
 
