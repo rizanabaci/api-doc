@@ -1775,11 +1775,12 @@ GET /api/administration/actions/
     "type": "email",
     "recipients": [1, 2, 5],
     "user_groups": [1, 2],
+    "device_type": "HALO",
     "device_list": "device_001,device_002,device_003",
     "message_type": "critical",
     "message_template": "Alert: {alert_type} detected in {area_name}. Sensor: {sensor_name}. Description: {description}",
     "is_active": true,
-    "created_by": 1,
+    "created_by_username": "admin",
     "http_method": "POST",
     "created_at": "2026-01-29T10:00:00Z",
     "updated_at": "2026-01-29T10:00:00Z"
@@ -1809,6 +1810,8 @@ Content-Type: application/json
   "type": "email",
   "recipients": [1, 2],
   "user_groups": [1],
+  "device_type": "HALO",
+  "device_list": "device_001,device_002",
   "message_template": "Alert: {alert_type} at {area_name}",
   "message_type": "warning",
   "is_active": true
@@ -1830,6 +1833,8 @@ Content-Type: application/json
   "is_active": false,
   "recipients": [1, 2, 3],
   "user_groups": [1, 2],
+  "device_type": "HALO",
+  "device_list": "device_001,device_002,device_003",
   "message_template": "Updated template: {alert_type} in {area_name}",
   "message_type": "critical"
 }
